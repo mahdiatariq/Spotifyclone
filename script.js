@@ -16,7 +16,51 @@ async function getSongs(folder /* e.g. "songs/ncs" */) {
   currFolder = folder;
   try {
     // fetch directory index (server needs to list directory)
-    let a = await fetch(`${folder}/`);
+    // let a = await fetch(`${folder}/`);
+    async function getSongs(folder /* e.g. "songs/ncs" */) {
+      currFolder = folder;
+      try {
+        // fetch songs.json instead of folder listing
+        let res = await fetch(`${folder}/songs.json`);
+        if (!res.ok) throw new Error(`${folder}/songs.json not found`);
+        songs = await res.json();
+    
+        // populate song list in the DOM (your existing code)
+        const songListContainer = document.querySelector(".songlist ul");
+        if (!songListContainer) return songs;
+        songListContainer.innerHTML = "";
+        for (const song of songs) {
+          const displayName = song.replaceAll("%20", " ");
+          songListContainer.insertAdjacentHTML('beforeend', `
+            <li>
+              <img class="invert" width="34" src="music.svg" alt="">
+              <div class="info">
+                <div>${displayName}</div>
+                <div>Artist</div>
+              </div>
+              <div class="playnow">
+                <span>Play Now</span>
+                <img class="invert" src="play.svg" alt="">
+              </div>
+            </li>
+          `);
+        }
+    
+        // attach click listeners
+        Array.from(document.querySelectorAll(".songlist ul li")).forEach(li => {
+          li.addEventListener("click", () => {
+            const track = li.querySelector(".info > div")?.textContent?.trim();
+            if (track) playMusic(track);
+          });
+        });
+    
+        return songs;
+      } catch (err) {
+        console.error("getSongs error:", err);
+        return [];
+      }
+    }
+    
     if (!a.ok) throw new Error(`${folder}/ not found`);
     let response = await a.text();
     let div = document.createElement("div");
